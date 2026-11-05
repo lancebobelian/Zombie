@@ -752,6 +752,7 @@ const flTarget=new THREE.Object3D(); flTarget.position.set(0,-0.15,-5); camera.a
 /* weapons: real-world guns, each with its own magazine, fire mode and optic */
 const WEAPONS={
   pistol:{name:'M1911',cls:'Pistol',price:0,dmg:38,rate:0.2,mag:8,reserve:Infinity,reload:1.1,spread:0.006,adsSpread:0.4,pellets:1,recoil:0.02,kick:0.05,adsFov:62,sound:'pistol',optic:'iron',mode:'semi',bars:[3,4,2],desc:'Your trusty sidearm. Never runs out of ammo.'},
+  berettas:{name:'Dual Berettas',cls:'Pistol',price:1400,dmg:32,rate:0.1,mag:40,reserve:400,reload:1.8,spread:0.008,adsSpread:1,pellets:1,recoil:0.006,kick:0.012,adsFov:75,sound:'beretta',optic:'iron',mode:'auto',dual:true,moveMul:1.05,bars:[3,9,5],desc:'Two pistols at once, full auto, and you move faster carrying them.'},
   deagle:{name:'Desert Eagle',cls:'Pistol',price:800,dmg:100,rate:0.32,mag:7,reserve:56,reload:1.4,spread:0.008,adsSpread:0.35,pellets:1,recoil:0.05,kick:0.11,adsFov:60,sound:'deagle',optic:'iron',mode:'semi',pierce:2,stagger:0.15,bars:[6,3,2],desc:'A hand cannon. Seven huge rounds that punch through two zombies.'},
   smg11:{name:'SMG-11',cls:'SMG',price:750,dmg:18,rate:0.045,mag:16,reserve:192,reload:1.1,spread:0.016,adsSpread:0.5,pellets:1,recoil:0.008,kick:0.022,adsFov:58,sound:'smg11',optic:'dot',mode:'auto',bars:[2,10,3],desc:'Tiny and wild. Empties all 16 rounds in under a second.'},
   mp5:{name:'MP5',cls:'SMG',price:1000,dmg:22,rate:0.07,mag:30,reserve:240,reload:1.5,spread:0.01,adsSpread:0.45,pellets:1,recoil:0.006,kick:0.022,adsFov:58,sound:'smg',optic:'iron',mode:'auto',bars:[2,8,5],desc:'The classic. Smooth, accurate and easy to control.'},
@@ -780,7 +781,7 @@ const WEAPONS={
   freeze:{name:'Freeze Ray',price:8000,dmg:18,rate:0.05,mag:300,reserve:2400,reload:2.4,spread:0,adsSpread:1,pellets:1,recoil:0,kick:0.004,adsFov:64,sound:'freeze',beam:true,freezeAt:0.6,freezeT:2.5,flash:0x9fe8ff,bars:[6,10,6],desc:'A freezing beam. Hold it on a zombie to freeze it solid, and frozen zombies take 50% more damage.'},
   tesla:{name:'Tesla Cannon',price:10000,dmg:420,chain:10,chainR:11,freezeT:1.5,rate:0.45,mag:12,reserve:84,reload:2.2,spread:0,adsSpread:1,pellets:1,recoil:0.03,kick:0.08,adsFov:62,sound:'zap',tesla:true,flash:0x8fd0ff,bars:[10,5,3],desc:'Hits one zombie hard, then the lightning freezes up to ten more in place.'}
 };
-const SHOP_GROUPS=[['Pistols',['deagle']],['SMGs',['smg11','mp5','mp7','p90','ppsh']],['Assault rifles',['famas','m16','ak47','m4a1','galil','aug','scarh']],
+const SHOP_GROUPS=[['Pistols',['berettas','deagle']],['SMGs',['smg11','mp5','mp7','p90','ppsh']],['Assault rifles',['famas','m16','ak47','m4a1','galil','aug','scarh']],
   ['Shotguns',['dbl','spas12','aa12']],['Sniper rifles',['kar98k','dragunov','intervention','barrett']],['LMGs',['rpk','m60']],['Specials',['thumper','flamer','freeze','tesla']]];
 const SHOP_ORDER=SHOP_GROUPS.flatMap(g=>g[1]);
 /* runs saved before the gun update named their guns by type */
@@ -834,6 +835,16 @@ function gunKit(){
 }
 const P2=Math.PI/2;
 const MODELS={
+  berettas(){  /* two Beretta 92s, one in each hand */
+    const g=new THREE.Group(), subs=[], mz=[], fls=[];
+    for(const sx of [1,-1]){ const s=new THREE.Group(); s.position.set(sx>0?0:-0.4,0,0); s.rotation.z=-sx*0.06; g.add(s); subs.push(s);
+      const add=(geo,m,x,y,z,rx)=>{ const b=new THREE.Mesh(geo,m); b.position.set(x,y,z); if(rx) b.rotation.x=rx; s.add(b); return b; };
+      add(BX(0.044,0.046,0.21),gDark,0,0.022,-0.07); add(BX(0.026,0.018,0.11),gSteel,0,0.05,-0.115); add(CY(0.011,0.011,0.05),gSteel,0,0.03,-0.19,P2);
+      add(BX(0.04,0.03,0.17),gDark,0,-0.012,-0.06); add(BX(0.04,0.125,0.058),gDark,0,-0.075,0.03,-0.2); add(BX(0.043,0.09,0.046),gWood,0,-0.07,0.028,-0.2);
+      add(BX(0.012,0.03,0.045),gDark,0,-0.045,-0.04); add(BX(0.008,0.012,0.01),gDark,0,0.05,-0.165); add(BX(0.03,0.012,0.012),gDark,0,0.05,0.025);
+      const m=new THREE.Object3D(); m.position.set(0,0.03,-0.22); s.add(m); mz.push(m); const fl=flashPlane(0.2); m.add(fl); fls.push(fl); }
+    const hip=new THREE.Vector3(0.2,-0.19,-0.34);
+    return {g,muzzle:mz[0],fl:fls[0],mz1:mz[0],mz2:mz[1],fl1:fls[0],fl2:fls[1],subs,dual:true,kick:[0,0],side:1,hip,aim:hip.clone()}; },
   pistol(){ const {add,finish}=gunKit();
     add(BX(0.045,0.05,0.2),gMetal,0,0.02,-0.06); add(BX(0.04,0.03,0.16),gDark,0,-0.01,-0.05);
     add(BX(0.038,0.12,0.055),gDark,0,-0.07,0.03,-0.25); add(BX(0.042,0.085,0.04),gWood,0,-0.066,0.026,-0.25);
@@ -1024,6 +1035,7 @@ const PAP_COLORS=[0,0x2a6aff,0xa83aff,0xffb21a], PAP_CSS=['','#6a9aff','#c47aff'
 const PAP_DMG=[1,2,3,4.5], PAP_MAG=[1,1.5,2,2.5], PAP_RELOAD=[1,1,0.8,0.65], PAP_RATE=[1,1,1,1/1.15];
 const PAP={
   pistol:[{name:'Hot Rod',d:'Double damage, bigger magazine'},{name:'Twin Exhaust',pellets:2,spread:0.01,d:'Fires two shots per pull'},{name:'Afterburner',boomR:2,boomMul:0.6,d:'Explosive rounds'}],
+  berettas:[{name:'Twin Vipers',rateMul:0.833,moveMul:1.08,d:'Double damage, faster fire, bigger mags, move faster'},{name:'Dragon Twins',rateMul:0.923,moveMul:1.11,burn:true,d:'Every bullet sets zombies on fire, even faster'},{name:'Blood Twins',mag:100,moveMul:1.15,leech:1,trail:true,d:'Kills heal you (more for tough ones), then top up armor, plus a trail of fire'}],
   deagle:[{name:'Hand Cannon',d:'Double damage, bigger magazine'},{name:'Bone Breaker',pierce:3,stagger:0.5,d:'Punches through three zombies and staggers them'},{name:'Hammerfall',boomR:2,boomMul:0.3,d:'Explosive rounds'}],
   smg11:[{name:'Pocket Rocket',d:'Double damage, bigger magazine'},{name:'Wasp Nest',ricochet:true,d:'Bullets ricochet into a nearby zombie'},{name:'Firecracker',burn:true,d:'Bullets set zombies on fire'}],
   mp5:[{name:'Hornet',d:'Double damage, bigger magazine'},{name:'Swarm',ricochet:true,d:'Bullets ricochet into a nearby zombie'},{name:'Killer Bees',poison:true,d:'Poison that spreads when zombies die'}],
@@ -2862,6 +2874,7 @@ function tn(f1,f2,dur,type,gain){
 }
 const sfx={
   rifle(){ nz(0.14,2200,0.55); tn(160,50,0.09,'square',0.16); },
+  beretta(){ nz(0.08,3000,0.32); tn(260,90,0.05,'square',0.08); },
   pistol(){ nz(0.1,2600,0.45); tn(230,80,0.07,'square',0.12); },
   smg(){ nz(0.08,2800,0.35); tn(190,70,0.05,'square',0.1); },
   lmg(){ nz(0.16,1500,0.6); tn(120,40,0.1,'square',0.18); },
@@ -4094,7 +4107,7 @@ function updatePlayer(dt){
   const sprint=(held('sprint')||(joy.active&&Math.hypot(joy.x,joy.y)>0.95))&&iz>0.3&&!ads;
   if(player.chillT>0) player.chillT-=dt;
   if(player.inkT>0) player.inkT-=dt;
-  const spd=(sprint?9.2:5.8)*(ads?0.6:1)*(W(inv[cur]).heavy||1)*(hasPerk('road')?1.15:1)*(player.chillT>0?0.6:1);
+  const spd=(sprint?9.2:5.8)*(ads?0.6:1)*(W(inv[cur]).heavy||1)*(W(inv[cur]).moveMul||1)*(hasPerk('road')?1.15:1)*(player.chillT>0?0.6:1);
   const fx=-Math.sin(yaw), fz=-Math.cos(yaw), rx=Math.cos(yaw), rz=-Math.sin(yaw);
   const vx=(fx*iz+rx*ix)*spd, vz=(fz*iz+rz*ix)*spd;
   let vacX=0, vacZ=0;
@@ -4219,7 +4232,9 @@ function fire(){
   let gap=w.rate; if(w.burstN){ slot.bq=(slot.bq>0?slot.bq:w.burstN)-1; if(slot.bq>0) gap=w.burstGap; }
   slot.mag--; fireCd+=gap*(w.spin?1-0.4*spinT/2:1)*(hasPerk('rapid')?0.75:1); sfx[w.sound]();
   if(w.bolt&&slot.mag>0) setTimeout(()=>{ if(state==='playing'&&inv[cur]===slot) sfx.bolt(); },Math.min(380,fireCd*500));
-  camera.updateMatrixWorld(); const gn=guns[slot.id]; gn.muzzle.getWorldPosition(_muz);
+  camera.updateMatrixWorld(); const gn=guns[slot.id];
+  if(gn.dual){ gn.side=1-gn.side; gn.muzzle=gn.side?gn.mz2:gn.mz1; gn.fl1.material.opacity=0; gn.fl2.material.opacity=0; gn.fl=gn.side?gn.fl2:gn.fl1; gn.kick[gn.side]=0.05; }  /* left, right, left, right */
+  gn.muzzle.getWorldPosition(_muz);
   const spread=w.spread*(1+moveAmt*1.2+(player.onGround?0:1.5))*(1-adsT*(1-w.adsSpread)), fxE=[];
   if(w.projectile){
     _dir.set((Math.random()-0.5)*2*spread,(Math.random()-0.5)*2*spread,-1).normalize().applyQuaternion(camera.quaternion);
@@ -4303,7 +4318,7 @@ function updateWeapon(dt){
   if(w.spin&&mouseDown&&s.mag>0&&!reloading) spinT=Math.min(2,spinT+dt); else spinT=Math.max(0,spinT-dt*2);
   if(mouseDown||s.bq>0) fire();
   if(fireCd<0) fireCd=0;
-  adsT=clamp(adsT+((ads&&!reloading&&swapT<=0&&papT<=0)?1:-1)*dt*(hasPerk('dead')?12:7),0,1);
+  adsT=clamp(adsT+((ads&&!w.dual&&!reloading&&swapT<=0&&papT<=0)?1:-1)*dt*(hasPerk('dead')?12:7),0,1);
   const fov=75+(w.adsFov-75)*adsT; if(Math.abs(camera.fov-fov)>0.01){ camera.fov=fov; camera.updateProjectionMatrix(); }
   gunKick=Math.max(0,gunKick-dt*0.6);
   const pos=gn.g.position; pos.lerpVectors(gn.hip,gn.aim,adsT);
@@ -4314,6 +4329,12 @@ function updateWeapon(dt){
   if(papT>0){ pos.y-=0.5; }
   if(gn.tier){ const pulse=0.3+0.22*Math.sin(gameTime*4); for(const m of gn.camo) m.emissiveIntensity=pulse; }
   gn.g.rotation.set(rx,0,rz);
+  if(gn.dual) for(let s2=0;s2<2;s2++){ gn.kick[s2]=Math.max(0,gn.kick[s2]-dt*0.45); gn.subs[s2].position.z=gn.kick[s2]; gn.subs[s2].rotation.x=gn.kick[s2]*3; }
+  if(w.trail&&player.onGround&&player.hp>0){  /* Blood Twins: a trail of fire follows you and burns zombies, never you */
+    const tr=updateWeapon.tr||(updateWeapon.tr={x:player.pos.x,z:player.pos.z,w:null});
+    if(Math.hypot(player.pos.x-tr.x,player.pos.z-tr.z)>1.2){ tr.x=player.pos.x; tr.z=player.pos.z;
+      if(!tr.w||tr.w.src!==w) tr.w={src:w,poolR:1.3,poolT:3,dmg:w.dmg*0.08,tier:0};
+      firePool(new THREE.Vector3(player.pos.x,0,player.pos.z),tr.w,1); } }
   flashT-=dt; gn.fl.material.opacity=flashT>0?1:0;
   muzzleLight.intensity=Math.max(0,muzzleLight.intensity-dt*40);
   const scoped=!!w.scope&&adsT>0.85;
@@ -5479,6 +5500,10 @@ function creditKill(type,head){
   const pts=Math.round(TYPES[type].pts*(head?1.5:1)*(1+Math.max(0,wave-1)*0.05)); score+=pts; kills++;
   const c=Math.round((CASH[type]||50)*(head?1.5:1)*(hasPerk('cash')?1.25:1)*(curMap.cashMul||1)); cash+=c;
   popup(head?`Headshot +$${c}`:`+$${c}`,head?'head':'');
+  { const s=inv[cur], lw=s&&W(s).leech, D=TYPES[type];  /* Blood Twins: kills heal you, tougher kills heal more, and a full health bar tops up your armor */
+    if(lw&&player.hp>0&&D){ const heal=D.boss?50:(D.mini?25:((D.resist||type==='brute'||type==='spider')?5:1));
+      if(player.hp<player.maxHp) player.hp=Math.min(player.maxHp,player.hp+heal);
+      else if(armorLv>0&&armorHp<ARMOR[armorLv].max) armorHp=Math.min(ARMOR[armorLv].max,armorHp+1); } }
 }
 function poolW(w){ return {r:r2(w.poolR),pt:r2(w.poolT),d:r2(w.dmg),tr:w.tier||0,b:w.blue?1:0,s:w.slow?1:0}; }
 function poolIn(m){
