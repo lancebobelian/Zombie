@@ -768,6 +768,7 @@ const WEAPONS={
   mp7:{name:'MP7',cls:'SMG',price:1200,dmg:20,rate:0.06,mag:40,reserve:280,reload:1.6,spread:0.011,adsSpread:0.4,pellets:1,recoil:0.006,kick:0.02,adsFov:54,sound:'smg',optic:'holo',mode:'auto',bars:[2,9,6],desc:'Compact, with a 40-round mag and a holo sight.'},
   p90:{name:'P90',cls:'SMG',price:1500,dmg:19,rate:0.055,mag:50,reserve:300,reload:2.0,spread:0.012,adsSpread:0.4,pellets:1,recoil:0.005,kick:0.02,adsFov:55,sound:'p90',optic:'dot',mode:'auto',bars:[2,9,7],desc:'50 rounds in a mag on top, with a built-in red dot.'},
   ppsh:{name:'PPSh-41',cls:'SMG',price:1800,dmg:18,rate:0.05,mag:71,reserve:284,reload:2.4,spread:0.014,adsSpread:0.5,pellets:1,recoil:0.007,kick:0.024,adsFov:60,sound:'ppsh',optic:'iron',mode:'auto',magName:'drum',bars:[2,10,8],desc:'A 71-round drum that never seems to run dry.'},
+  garand:{name:'M1 Garand',cls:'Assault rifle',price:1600,dmg:90,rate:0.3,mag:8,reserve:96,reload:1.6,spread:0.004,adsSpread:0.3,pellets:1,recoil:0.035,kick:0.07,adsFov:55,sound:'garand',optic:'iron',mode:'semi',pierce:1,ping:true,bars:[6,4,3],desc:'The classic. Eight hard-hitting rounds and that famous ping when the clip flies out.'},
   m16:{name:'M16',cls:'Assault rifle',price:1400,dmg:34,rate:0.26,burstN:3,burstGap:0.06,mag:30,reserve:240,reload:1.6,spread:0.006,adsSpread:0.3,pellets:1,recoil:0.011,kick:0.035,adsFov:54,sound:'burst',optic:'iron',mode:'burst',bars:[4,6,5],desc:'Fires tight 3-round bursts. Great for headshots.'},
   famas:{name:'FAMAS',cls:'Assault rifle',price:1300,dmg:22,rate:0.065,mag:25,reserve:225,reload:1.5,spread:0.008,adsSpread:0.4,pellets:1,recoil:0.009,kick:0.03,adsFov:55,sound:'rifle',optic:'iron',mode:'auto',bars:[3,9,4],desc:'Blistering fire rate, but only 25 rounds.'},
   ak47:{name:'AK-47',cls:'Assault rifle',price:1500,dmg:30,rate:0.1,mag:30,reserve:240,reload:1.7,spread:0.009,adsSpread:0.4,pellets:1,recoil:0.014,kick:0.04,adsFov:57,sound:'ak',optic:'iron',mode:'auto',bars:[4,7,5],desc:'Hits hard and kicks hard. A legend.'},
@@ -790,7 +791,7 @@ const WEAPONS={
   freeze:{name:'Freeze Ray',price:8000,dmg:18,rate:0.05,mag:300,reserve:2400,reload:2.4,spread:0,adsSpread:1,pellets:1,recoil:0,kick:0.004,adsFov:64,sound:'freeze',beam:true,freezeAt:0.6,freezeT:2.5,flash:0x9fe8ff,bars:[6,10,6],desc:'A freezing beam. Hold it on a zombie to freeze it solid, and frozen zombies take 50% more damage.'},
   tesla:{name:'Tesla Cannon',price:10000,dmg:420,chain:10,chainR:11,freezeT:1.5,rate:0.45,mag:12,reserve:84,reload:2.2,spread:0,adsSpread:1,pellets:1,recoil:0.03,kick:0.08,adsFov:62,sound:'zap',tesla:true,flash:0x8fd0ff,bars:[10,5,3],desc:'Hits one zombie hard, then the lightning freezes up to ten more in place.'}
 };
-const SHOP_GROUPS=[['Pistols',['berettas','deagle']],['SMGs',['smg11','mp5','mp7','p90','ppsh']],['Assault rifles',['famas','m16','ak47','m4a1','galil','aug','scarh']],
+const SHOP_GROUPS=[['Pistols',['berettas','deagle']],['SMGs',['smg11','mp5','mp7','p90','ppsh']],['Assault rifles',['famas','m16','garand','ak47','m4a1','galil','aug','scarh']],
   ['Shotguns',['dbl','spas12','aa12']],['Sniper rifles',['kar98k','dragunov','intervention','barrett']],['LMGs',['rpk','m60']],['Specials',['thumper','flamer','freeze','tesla']]];
 const SHOP_ORDER=SHOP_GROUPS.flatMap(g=>g[1]);
 /* runs saved before the gun update named their guns by type */
@@ -896,6 +897,15 @@ const MODELS={
     part.drum(gMetal,-0.1,-0.11,0.072,0.05);
     add(BX(0.026,0.018,0.02),gDark,0,0.054,0.0); add(BX(0.006,0.024,0.006),gDark,0,0.05,-0.38);
     return finish([0,0.015,-0.44],[0.21,-0.2,-0.36],[0,-0.063,-0.36],0.24); },
+  garand(){ const {add,finish}=gunKit(); const brass=new THREE.MeshLambertMaterial({color:0xc9a24a});
+    add(BX(0.055,0.07,0.5),gWood,0,-0.015,-0.26); add(BX(0.05,0.05,0.2),gMetal,0,0.012,0.0); add(CY(0.012,0.012,0.52),gDark,0,0.03,-0.56,P2); add(CY(0.009,0.009,0.38),gDark,0,0.0,-0.5,P2);
+    add(BX(0.032,0.02,0.05),brass,0,0.045,0.0); add(BX(0.056,0.1,0.3),gWood,0,-0.045,0.24,0.14); add(BX(0.058,0.02,0.04),gDark,0,-0.01,-0.42);
+    add(BX(0.03,0.012,0.022),gDark,0,0.041,-0.8); add(BX(0.004,0.022,0.006),gDark,0,0.047,-0.8);  /* front post between protective wings */
+    for(const sx of [-1,1]) add(BX(0.003,0.03,0.016),gDark,sx*0.012,0.05,-0.8);
+    add(BX(0.034,0.014,0.03),gDark,0,0.04,0.08); add(new THREE.TorusGeometry(0.011,0.0035,8,20),gDark,0,0.058,0.08);  /* rear peep aperture on its base */
+    for(const sx of [-1,1]) add(BX(0.004,0.026,0.026),gDark,sx*0.019,0.054,0.08);
+    add(BX(0.01,0.03,0.045),gDark,0,-0.05,0.04);
+    return finish([0,0.03,-0.83],[0.22,-0.21,-0.38],[0,-0.058,-0.28],0.3); },
   m16(){ const {add,finish,part}=gunKit();
     add(BX(0.06,0.085,0.3),gDark,0,0,-0.02); add(CY(0.035,0.032,0.24,8),gDark,0,0.0,-0.29,P2); add(CY(0.012,0.012,0.16),gDark,0,0.005,-0.48,P2); add(CY(0.016,0.016,0.04),gDark,0,0.005,-0.57,P2);
     for(const z of [0.05,-0.1]) add(BX(0.02,0.045,0.02),gDark,0,0.065,z); add(BX(0.03,0.012,0.17),gDark,0,0.094,-0.02); add(BX(0.025,0.022,0.022),gDark,0,0.109,0.05);
@@ -1051,6 +1061,7 @@ const PAP={
   mp7:[{name:'Stingray',d:'Double damage, bigger magazine'},{name:'Needlepoint',pierce:3,ap:true,d:'Punches through three zombies, cuts through armor'},{name:'Venom',poison:true,d:'Poison that spreads when zombies die'}],
   p90:[{name:'Hive',d:'Double damage, bigger magazine'},{name:'Overclock',rateMul:1/1.25,ap:true,d:'Faster fire, cuts through armor'},{name:'Pinball',ricochet:true,d:'Bullets ricochet into a nearby zombie'}],
   ppsh:[{name:'Red Banner',d:'Double damage, bigger drum'},{name:'Burp Gun',rateMul:1/1.2,reloadMul:0.7,d:'Faster fire, faster reload'},{name:'Firestorm',burn:true,burnSlow:true,d:'Bullets set zombies on fire and slow them'}],
+  garand:[{name:'Iron Ranger',reloadMul:0.8,d:'Double damage, 12-round clip, faster reload'},{name:'Long Tom',pierce:3,magnet:2,d:'Shots pierce 3 zombies and the aim assist is twice as strong'},{name:'Deadeye',deadeye:true,d:'Locks onto the nearest head: every shot is a headshot'}],
   m16:[{name:'Liberty',d:'Double damage, bigger magazine'},{name:'Triple Threat',pierce:2,ap:true,d:'Punches through two zombies, cuts through armor'},{name:'Skullsplitter',rateMul:1/1.3,headBoom:true,d:'Faster bursts, and headshot kills explode'}],
   famas:[{name:'Clarion',d:'Double damage, bigger magazine'},{name:'Fleur',ricochet:true,d:'Bullets ricochet into a nearby zombie'},{name:'Bastille',burn:true,d:'Bullets set zombies on fire'}],
   ak47:[{name:'Red Star',d:'Double damage, bigger magazine'},{name:'Iron Curtain',pierce:2,ap:true,d:'Punches through two zombies, cuts through armor'},{name:'Firebird',burn:true,d:'Bullets set zombies on fire'}],
@@ -2883,6 +2894,8 @@ function tn(f1,f2,dur,type,gain){
   o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.05);
 }
 const sfx={
+  garand(){ nz(0.12,1800,0.55); tn(140,60,0.12,'square',0.15); },
+  clipPing(){ tn(2600,2500,0.5,'sine',0.22); tn(3900,3800,0.35,'sine',0.1); },
   rifle(){ nz(0.14,2200,0.55); tn(160,50,0.09,'square',0.16); },
   beretta(){ nz(0.08,3000,0.32); tn(260,90,0.05,'square',0.08); },
   pistol(){ nz(0.1,2600,0.45); tn(230,80,0.07,'square',0.12); },
@@ -4233,7 +4246,27 @@ function updateBolts(dt){
   }
 }
 const _mf=new THREE.Vector3(), _mp=new THREE.Vector3(), _mv=new THREE.Vector3(), _mq=new THREE.Quaternion();
-function magnetQuat(){
+/* Deadeye: the nearest head in a wide cone ahead that you can actually see */
+const _deF=new THREE.Vector3(), _deP=new THREE.Vector3(), _deV=new THREE.Vector3();
+function deadeyeTarget(){
+  _deF.set(0,0,-1).applyQuaternion(camera.quaternion); let best=null, bestA=0.42;
+  for(const z of zombies){ if(z.dead) continue; const hp=z.parts.find(q=>q.userData.head&&!q.userData.sac); if(!hp||!hp.parent) continue;
+    hp.getWorldPosition(_deP); _deV.copy(_deP).sub(camera.position); const d=_deV.length(); if(d<0.8||d>60) continue;
+    const a=_deV.normalize().angleTo(_deF); if(a>=bestA) continue;
+    raycaster.set(camera.position,_deV); raycaster.far=d-0.3; const bl=raycaster.intersectObjects(solids,false); raycaster.far=220; if(bl.length) continue;
+    bestA=a; best={z,part:hp,pos:_deP.clone()}; }
+  return best;
+}
+let deLock=null, deT=0, deMark=null;
+function deadeyeMark(w,dt){
+  if(!deMark){ const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d'); g.strokeStyle='#ff3a2a'; g.lineWidth=5; g.beginPath(); g.moveTo(32,6); g.lineTo(58,32); g.lineTo(32,58); g.lineTo(6,32); g.closePath(); g.stroke();
+    g.fillStyle='#ff3a2a'; g.fillRect(29,29,6,6); deMark=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true})); deMark.scale.set(0.5,0.5,1); deMark.renderOrder=10; deMark.visible=false; scene.add(deMark); }
+  if(!w.deadeye||state!=='playing'){ deMark.visible=false; deLock=null; return; }
+  deT-=dt; if(deT<=0||(deLock&&deLock.z.dead)){ deT=0.08; deLock=deadeyeTarget(); }
+  if(deLock&&!deLock.z.dead&&deLock.part.parent){ deLock.part.getWorldPosition(deMark.position); deMark.visible=true; } else deMark.visible=false;
+}
+function magnetQuat(mul){
+  mul=mul||1;
   _mf.set(0,0,-1).applyQuaternion(camera.quaternion);
   let bestA=1e9, found=false;
   for(const z of zombies){
@@ -4243,7 +4276,7 @@ function magnetQuat(){
     for(const q of [headPart,beh(z)==='knight'?null:z.parts[0]]){  /* a knight's chest is half behind its shield, so the pull goes to the helmet */
       if(!q||!q.parent) continue;
       q.getWorldPosition(_mp); _mv.copy(_mp).sub(camera.position); const dd=_mv.length(); if(dd<0.5) continue;
-      const ang=_mv.normalize().angleTo(_mf), tol=Math.min(0.07,Math.atan(0.55/dd))+0.012;
+      const ang=_mv.normalize().angleTo(_mf), tol=Math.min(0.07*mul,Math.atan(0.55*mul/dd))+0.012;
       if(ang<tol&&ang<bestA){ bestA=ang; found=true; _end.copy(_mv); }
     }
   }
@@ -4257,7 +4290,8 @@ function fire(){
   if(gg) gg.protT=0;
   /* burst guns fire burstN quick shots per pull, then wait the full rate */
   let gap=w.rate; if(w.burstN){ slot.bq=(slot.bq>0?slot.bq:w.burstN)-1; if(slot.bq>0) gap=w.burstGap; }
-  slot.mag--; fireCd+=gap*(w.spin?1-0.4*spinT/2:1)*(hasPerk('rapid')?0.75:1); sfx[w.sound]();
+  slot.mag--; if(w.ping&&slot.mag===0) setTimeout(()=>{ sfx.clipPing(); },60);
+  fireCd+=gap*(w.spin?1-0.4*spinT/2:1)*(hasPerk('rapid')?0.75:1); sfx[w.sound]();
   if(w.bolt&&slot.mag>0) setTimeout(()=>{ if(state==='playing'&&inv[cur]===slot) sfx.bolt(); },Math.min(380,fireCd*500));
   camera.updateMatrixWorld(); const gn=guns[slot.id];
   if(gn.dual){ gn.side=1-gn.side; gn.muzzle=gn.side?gn.mz2:gn.mz1; gn.fl1.material.opacity=0; gn.fl2.material.opacity=0; gn.fl=gn.side?gn.fl2:gn.fl1; gn.kick[gn.side]=0.05; }  /* left, right, left, right */
@@ -4281,10 +4315,10 @@ function fire(){
   }else{
     const hitsPer=new Map(), hittables=getHittables(), pvpHits=new Map(); let pinged=false;
     slot.shots=(slot.shots||0)+1; const boomShot=w.every5&&slot.shots%5===0, tc=PAP_COLORS[w.tier||0];
-    const magQ=magnetQuat();
+    const magQ=magnetQuat(w.magnet||1), dead=w.deadeye?deadeyeTarget():null;  /* Deadeye: every bullet goes for the locked head */
     for(let i=0;i<w.pellets;i++){
       _dir.set((Math.random()-0.5)*2*spread,(Math.random()-0.5)*2*spread,-1).normalize().applyQuaternion(camera.quaternion);
-      if(magQ) _dir.applyQuaternion(magQ);
+      if(dead) _dir.copy(dead.pos).sub(camera.position).normalize(); else if(magQ) _dir.applyQuaternion(magQ);
       raycaster.set(camera.position,_dir);
       const hits=raycaster.intersectObjects(hittables,false);
       let pierced=0, end=null, impact=null; const seen=new Set();
@@ -4294,6 +4328,7 @@ function fire(){
           if(w.falloff){ const fr=w.falloffR||6, fm=w.falloffMin||0.35; if(h.distance>fr) dmg*=Math.max(fm,1-(h.distance-fr)/18*(1-fm)); }
           pvpHits.set(pp,(pvpHits.get(pp)||0)+dmg); burst(h.point,5,'blood',3,2,0.5); if(!impact) impact=h.point.clone(); end=h.point; pierced++; if(pierced>=(w.pierce||1)) break; continue; }
         const z=h.object.userData.z;
+        if(dead&&z===dead.z&&!h.object.userData.head) continue;  /* Deadeye goes past the arms to the head */
         if(!z){ burst(h.point,4,'spark',3,2.5,0.25,0.06); if(!impact) impact=h.point.clone(); if(w.wallPierce) continue; end=h.point; break; }
         if(z.dead||seen.has(z)) continue;
         if(h.object.userData.shield){ burst(h.point,6,'spark',3,2.5,0.25,0.06); pinged=true; if(!impact) impact=h.point.clone(); if(w.wallPierce) continue; end=h.point; break; }
@@ -4362,6 +4397,7 @@ function updateWeapon(dt){
   if(gn.tier){ const pulse=0.3+0.22*Math.sin(gameTime*4); for(const m of gn.camo) m.emissiveIntensity=pulse; }
   gn.g.rotation.set(rx,0,rz);
   if(meleeCd>0) meleeCd-=dt;
+  deadeyeMark(w,dt);
   if(meleeT>0){ meleeT=Math.max(0,meleeT-dt); const k=Math.sin((1-meleeT/0.28)*Math.PI); pos.z-=k*0.25; pos.x-=k*0.1; gn.g.rotation.y+=k*0.7; gn.g.rotation.x-=k*0.3; }
   if(gn.dual) for(let s2=0;s2<2;s2++){ gn.kick[s2]=Math.max(0,gn.kick[s2]-dt*0.45); gn.subs[s2].position.z=gn.kick[s2]; gn.subs[s2].rotation.x=gn.kick[s2]*3; }
   if(w.trail&&player.onGround&&player.hp>0){  /* Blood Twins: a trail of fire follows you and burns zombies, never you */
@@ -5733,7 +5769,7 @@ function renderTeam(){
 }
 
 /* Gun Game: players only. Every kill moves you up a gun; the first kill with the last gun wins */
-const GG_LADDER=['pistol','deagle','berettas','kar98k','dragunov','intervention','dbl','spas12','aa12','smg11','mp5','mp7','p90','ppsh','famas','m16','ak47','m4a1','galil','aug','scarh','barrett'];
+const GG_LADDER=['pistol','deagle','berettas','kar98k','dragunov','intervention','dbl','spas12','aa12','smg11','mp5','mp7','p90','ppsh','famas','m16','garand','ak47','m4a1','galil','aug','scarh','barrett'];
 const GG_DMG=0.65, GG_MELEE=55;
 let gg=null, netMode='zombies';
 function ggLv(id){ return (gg&&gg.lv.get(id))||0; }
