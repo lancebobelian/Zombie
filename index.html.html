@@ -65,6 +65,8 @@
   #ammoNum{font-size:40px}
   #ammoMax{font-size:20px;color:var(--dim);font-weight:600;margin-left:4px}
   #reloadTxt{font-size:16px;color:var(--sodium);min-height:20px;font-weight:600}
+  #deCount{position:absolute;left:50%;top:calc(50% + 34px);transform:translateX(-50%);font-weight:700;font-size:14px;color:var(--dim);text-shadow:0 1px 3px #000;pointer-events:none;white-space:nowrap}
+  #deCount.on{color:#ff6a5a;font-size:16px}
   #cross{position:absolute;left:50%;top:50%;--g:8px;transition:opacity .1s}
   #cross i{position:absolute;background:rgba(241,236,226,.92);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
   #cross .t,#cross .b{width:2px;height:8px;left:-1px}
@@ -347,6 +349,7 @@
     <div id="nadeHud" class="lbl"></div>
   </div>
   <div id="cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><b></b></div>
+  <div id="deCount" hidden></div>
   <div id="hit"></div>
   <div id="banner"></div>
   <div id="popups"></div>
@@ -1065,7 +1068,7 @@ const PAP={
   mp7:[{name:'Stingray',d:'Double damage, bigger magazine'},{name:'Needlepoint',pierce:3,ap:true,d:'Punches through three zombies, cuts through armor'},{name:'Venom',poison:true,d:'Poison that spreads when zombies die'}],
   p90:[{name:'Hive',d:'Double damage, bigger magazine'},{name:'Overclock',rateMul:1/1.25,ap:true,d:'Faster fire, cuts through armor'},{name:'Pinball',ricochet:true,d:'Bullets ricochet into a nearby zombie'}],
   ppsh:[{name:'Red Banner',d:'Double damage, bigger drum'},{name:'Burp Gun',rateMul:1/1.2,reloadMul:0.7,d:'Faster fire, faster reload'},{name:'Firestorm',burn:true,burnSlow:true,d:'Bullets set zombies on fire and slow them'}],
-  garand:[{name:'Iron Ranger',reloadMul:0.8,bayoR:4,bayoM:2.5,d:'Double damage, 12-round clip, faster reload'},{name:'Long Tom',pierce:3,magnet:2,bayoR:4.5,bayoM:3.5,d:'Shots pierce 3 zombies and the aim assist is twice as strong'},{name:'Deadeye',deadeye:true,bayoR:5,bayoM:5,d:'Locks onto the nearest head: every shot is a headshot'}],
+  garand:[{name:'Iron Ranger',reloadMul:0.8,bayoR:4,bayoM:2.5,d:'Double damage, 12-round clip, faster reload'},{name:'Long Tom',pierce:3,magnet:2,bayoR:4.5,bayoM:3.5,d:'Shots pierce 3 zombies and the aim assist is twice as strong'},{name:'Deadeye',deadeye:true,bayoR:5,bayoM:5,d:'Each bayonet kill earns 2 lock-on headshots'}],
   m16:[{name:'Liberty',d:'Double damage, bigger magazine'},{name:'Triple Threat',pierce:2,ap:true,d:'Punches through two zombies, cuts through armor'},{name:'Skullsplitter',rateMul:1/1.3,headBoom:true,d:'Faster bursts, and headshot kills explode'}],
   famas:[{name:'Clarion',d:'Double damage, bigger magazine'},{name:'Fleur',ricochet:true,d:'Bullets ricochet into a nearby zombie'},{name:'Bastille',burn:true,d:'Bullets set zombies on fire'}],
   ak47:[{name:'Red Star',d:'Double damage, bigger magazine'},{name:'Iron Curtain',pierce:2,ap:true,d:'Punches through two zombies, cuts through armor'},{name:'Firebird',burn:true,d:'Bullets set zombies on fire'}],
@@ -3915,19 +3918,23 @@ function leaperLand(z){
 let nades=1, nadeCd=0;
 const grenades=[], nadeGeo=new THREE.SphereGeometry(0.1,10,8), nadeMat=new THREE.MeshLambertMaterial({color:0x4a5636}), nadeBand=new THREE.MeshBasicMaterial({color:0xffd27a});
 function nadeMesh(){ const m=new THREE.Mesh(nadeGeo,nadeMat); const b=new THREE.Mesh(bgeo(0.205,0.04,0.205),nadeBand); m.add(b); const t=new THREE.Mesh(bgeo(0.04,0.06,0.04),gDark); t.position.y=0.11; m.add(t); return m; }
-let meleeCd=0, meleeT=0, meleeStab=false;
+let meleeCd=0, meleeT=0, meleeStab=false, deCharges=0;
 function melee(){
-  if(state!=='playing'||meleeCd>0||swapT>0||papT>0||reloading) return;
-  const mw=inv[cur]?W(inv[cur]):{}, mR=mw.bayoR||3, mM=mw.bayoM||1; meleeStab=!!mw.bayoR;  /* the bayonet reaches further and hits harder */
-  meleeCd=0.8; meleeT=0.28; nz(0.14,meleeStab?2200:1300,0.3,'bandpass'); if(gg) gg.protT=0;
-  const fx=-Math.sin(yaw), fz=-Math.cos(yaw); let hit=false;
-  for(const z of zombies){ if(z.dead) continue; const p=z.root.position, dx=p.x-player.pos.x, dz=p.z-player.pos.z, d=Math.hypot(dx,dz);
-    if(d>mR+z.d.radius*0.6||(dx*fx+dz*fz)/(d||1)<0.5||p.y>player.pos.y+2.5) continue;
+  if(state!=='playing'||meleeCd>0||swapT>0||papT>0) return;
+  if(reloading){ reloading=false; reloadT=0; }  /* bashing cancels a reload instead of being ignored */
+  const mw=inv[cur]?W(inv[cur]):{}, mR=(mw.bayoR||3)+0.5, mM=mw.bayoM||1; meleeStab=!!mw.bayoR;  /* the bayonet reaches further and hits harder */
+  meleeCd=mw.bayoR?0.4:0.8; meleeT=0.28; nz(0.14,meleeStab?2200:1300,0.3,'bandpass'); if(gg) gg.protT=0;
+  const fx=-Math.sin(yaw), fz=-Math.cos(yaw); let hit=false, earned=0;
+  for(const z of zombies){ if(z.dead) continue; const p=z.root.position, dx=p.x-player.pos.x, dz=p.z-player.pos.z, d=Math.hypot(dx,dz), body=z.d.radius*0.6;
+    const close=d<1.8+body, dot=(dx*fx+dz*fz)/(d||1);  /* anything hugging you gets hit, even slightly behind; further out it is a wide arc in front */
+    if(d>mR+body||(!close&&dot<0.17)||p.y>player.pos.y+2.5) continue;
     damageZombie(z,150*mM*(1+0.09*Math.max(0,wave-1)),false,null,!hit);
+    if(mw.deadeye&&(z.dead||z.hp<=0)) earned+=2;
     if(!z.dead&&!z.d.boss){ z.stagger=Math.max(z.stagger,0.5); z.kbv.set(dx/(d||1)*7,0,dz/(d||1)*7); }
     burst(chestPos(z),8,'blood',3,2,0.5); hit=true; }
+  if(earned){ deCharges=Math.min(12,deCharges+earned); popup(`+${earned} Deadeye shots`,'heal'); }
   if(gg) for(const P of NET.players.values()){ if(P.me||P.dn||!P.av) continue; const p=P.av.root.position, dx=p.x-player.pos.x, dz=p.z-player.pos.z, d=Math.hypot(dx,dz);
-    if(d>mR+0.2||(dx*fx+dz*fz)/(d||1)<0.5) continue; ggShoot(P.id,GG_MELEE,true); burst(new THREE.Vector3(p.x,1.3,p.z),8,'blood',3,2,0.5); hit=true; }
+    if(d>mR+0.2||(d>1.8&&(dx*fx+dz*fz)/(d||1)<0.17)) continue; ggShoot(P.id,GG_MELEE,true); burst(new THREE.Vector3(p.x,1.3,p.z),8,'blood',3,2,0.5); hit=true; }
   if(hit){ shake+=0.12; sfx.hit(false); }
 }
 function throwNade(){
@@ -4266,7 +4273,8 @@ let deLock=null, deT=0, deMark=null;
 function deadeyeMark(w,dt){
   if(!deMark){ const c=document.createElement('canvas'); c.width=c.height=64; const g=c.getContext('2d'); g.strokeStyle='#ff3a2a'; g.lineWidth=5; g.beginPath(); g.moveTo(32,6); g.lineTo(58,32); g.lineTo(32,58); g.lineTo(6,32); g.closePath(); g.stroke();
     g.fillStyle='#ff3a2a'; g.fillRect(29,29,6,6); deMark=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false,transparent:true})); deMark.scale.set(0.5,0.5,1); deMark.renderOrder=10; deMark.visible=false; scene.add(deMark); }
-  if(!w.deadeye||state!=='playing'){ deMark.visible=false; deLock=null; return; }
+  { const dc=$('deCount'); const on=!!w.deadeye&&state==='playing'; if(dc.hidden===on) dc.hidden=!on; if(on){ const t=deCharges>0?`Deadeye ×${deCharges}`:'Bayonet kills charge Deadeye'; if(dc.textContent!==t){ dc.textContent=t; dc.classList.toggle('on',deCharges>0); } } }
+  if(!w.deadeye||state!=='playing'||deCharges<=0){ deMark.visible=false; deLock=null; return; }
   deT-=dt; if(deT<=0||(deLock&&deLock.z.dead)){ deT=0.08; deLock=deadeyeTarget(); }
   if(deLock&&!deLock.z.dead&&deLock.part.parent){ deLock.part.getWorldPosition(deMark.position); deMark.visible=true; } else deMark.visible=false;
 }
@@ -4320,7 +4328,8 @@ function fire(){
   }else{
     const hitsPer=new Map(), hittables=getHittables(), pvpHits=new Map(); let pinged=false;
     slot.shots=(slot.shots||0)+1; const boomShot=w.every5&&slot.shots%5===0, tc=PAP_COLORS[w.tier||0];
-    const magQ=magnetQuat(w.magnet||1), dead=w.deadeye?deadeyeTarget():null;  /* Deadeye: every bullet goes for the locked head */
+    const magQ=magnetQuat(w.magnet||1), dead=(w.deadeye&&deCharges>0)?deadeyeTarget():null;  /* Deadeye: bayonet kills earn lock-on headshots */
+    if(dead) deCharges--;
     for(let i=0;i<w.pellets;i++){
       _dir.set((Math.random()-0.5)*2*spread,(Math.random()-0.5)*2*spread,-1).normalize().applyQuaternion(camera.quaternion);
       if(dead) _dir.copy(dead.pos).sub(camera.position).normalize(); else if(magQ) _dir.applyQuaternion(magQ);
@@ -4605,7 +4614,7 @@ function clearWorld(){
 }
 function resetGame(){
   gg=null; clearWorld();
-  player.maxHp=100; armorLv=0; armorHp=0; nades=1; nadeCd=0; player.burnT=0; player.chillT=0; player.inkT=0; player.vacT=0; clearKSlams();
+  player.maxHp=100; armorLv=0; armorHp=0; nades=1; nadeCd=0; player.burnT=0; player.chillT=0; player.inkT=0; player.vacT=0; deCharges=0; clearKSlams();
   player.pos.set(curMap.start[0],0,curMap.start[1]); player.vy=0; player.hp=player.maxHp; player.kb.set(0,0,0); player.onGround=true;
   yaw=curMap.yaw; pitch=0; wave=0; score=0; kills=0; bossCount=0; phase='intermission'; interT=3.5; queue=0; bossPending=false; dragonAt=0; dragonN=0; dragonPending=false;
   papT=0; papSlot=null; spinT=0; resetBox(); resetDoors(); cheat=false; cheatUsed=false; testMix={}; customQ.length=0; customBosses.length=0; customWave=false; perks=[]; lastHurtT=-99; wireReadyT=0; dropArm={id:null,t:0}; renderPerks();
